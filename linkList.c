@@ -21,14 +21,14 @@ struct list_node_s {
  *
  * @brief   Check the membership
  *
- * @param   value - 
- * @param   head_p - pointer to the head on link list
+ * @param   value   - value for node
+ * @param   head_p  - pointer to the head on link list
  *
  * @return  1 member or 0 not a member
  */
-int Member(int value, struct list_node_s* head_p)
+int Member(int value, struct list_node_s** head_p)
 {
-    struct list_node_s* curr_p = head_p;
+    struct list_node_s* curr_p = *head_p;
 
     while (curr_p != NULL && curr_p->data < value)
         curr_p = curr_p->next;
@@ -48,8 +48,8 @@ int Member(int value, struct list_node_s* head_p)
  *
  * @brief   Insert new node to link list
  *
- * @param   value - value for new node
- * @param   head_p - pointer to the head on link list
+ * @param   value   - value for new node
+ * @param   head_p  - pointer to the head on link list
  *
  * @return  1 inserted or 0 not inserted
  */
@@ -90,8 +90,8 @@ int Insert(int value, struct list_node_s** head_p)
  *
  * @brief   Delete node from link list
  *
- * @param   value - value of node
- * @param   head_p - pointer to the head on link list
+ * @param   value   - value of node
+ * @param   head_p  - pointer to the head on link list
  *
  * @return  1 deleted or 0 node not in list
  */
@@ -148,54 +148,133 @@ void print(struct list_node_s **head_p)
     }
 }
 
-
 /*********************************************************************
- * @fn      random_generator
+ * @fn      destructor
  *
- * @brief   random number generator which grenerates numbers not in
- *          the list
+ * @brief   free the memory by releasing the memory allocations 
  *
- * @param   random - random value
  * @param   head_p - pointer to the head on link list
  *
  * @return  0
  */
-// void random_generator(int *random, struct list_node_s *head_p)
-// {
-//     int member = 1; 
-//     while(member)
-//     {
-//         *random = rand()%65536;
-//         member = Member(*random, head_p);
-//     }
-// }
+void destructor(struct list_node_s **head_p) 
+{
+    struct list_node_s *curr_p = *head_p;
+    struct list_node_s *prev_p = NULL;
+
+    while(curr_p != NULL) 
+    {
+        prev_p = curr_p;
+        curr_p = curr_p->next;
+        free(prev_p);
+    }
+}
+
+/*********************************************************************
+ * @fn      random_generator
+ *
+ * @brief   random number generator which grenerates random numbers and
+ *          random insert, delete & member operations 
+ *
+ * @param   head_p - pointer to the head on link list
+ * @param   m      - total no of operation to be carried out
+ * @param   mM     - no of member operations ratio
+ * @param   mI     - no of insert operations ratio
+ * @param   mD     - no of delete operations ratio
+ *
+ * @return  none
+ */
+void random_generator(struct list_node_s **head_p, int m, float mM, float mI, float mD)
+{
+    int opM = m * mM;
+    int opD = m * mD;
+    int opI = m * mI;
+    int countM = 0, countI = 0, countD = 0, mCount = 0;
+    int random;
+
+    while( mCount < m )
+    {
+        int operation = rand()%3;
+        random = rand()%65536;
+
+        switch (operation)
+        {
+            case 0:
+
+            if( opM > countM)
+            {
+                Member(random, head_p);
+                countM++;
+                // printf("m");
+            }
+    
+            break;
+
+            case 1:
+
+            if( opI > countI)
+            {
+                Insert(random, head_p);
+                countI++;
+                // printf("i");
+            }
+            
+            break;
+
+            case 2:
+
+            if( opD > countD)
+            {
+                Delete(random, head_p);
+                countD++;
+                // printf("d");
+            }
+  
+            break;
+        }
+
+        mCount = countM + countI + countD;
+    }
+}
+
+/*********************************************************************
+ * @fn      populate
+ *
+ * @brief   populates n no of random data nodes in list 
+ *
+ * @param   head_p - pointer to the head on link list
+ * @param   n      - no of data nodes to be populated in list
+ *
+ * @return  0
+ */
+void populate(struct list_node_s **head_p, int n)
+{
+    int random;
+    for(int i = 0; i < n; i++) 
+    {
+        random = rand()%65536;
+        Insert(random, head_p);
+    }
+}
 
 
 void main()
 {
     srand(time(0));
     struct list_node_s *head = NULL;
-    int random;
-    int n = 50;
-    int m = 20;
+
+    int n = 1000;
+    int m = 10000;
     
-    for(int i = 0; i<n; i++) 
-    {
-        // random_generator(random, head);
-        random = rand()%65536;
-        Insert(random, &head);
-    }
+    populate(&head, n);
 
-    for(int i = 0; i<m; i++)
-    {
-        random = rand()%65536;
-        Insert(random, &head);
-        random = rand()%65536;
-        Member(random, head);
-        random = rand()%65536;
-        Delete(random, &head);
-
-    }
-
+    printf("\n");
     print(&head);
+
+    random_generator(&head, m, 0.99, 0.005, 0.005);
+
+    printf("\n");
+    print(&head);
+
+    destructor(&head);
 }
