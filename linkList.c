@@ -5,7 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 
+
+int thread_count; // Global variable to define the thread count
 
 /*********************************************************************
  * TYPEDEFS
@@ -257,24 +260,53 @@ void populate(struct list_node_s **head_p, int n)
     }
 }
 
-
-void main()
+void *runner(void *rank) //Thread function
 {
-    srand(time(0));
-    struct list_node_s *head = NULL;
+    long my_rank = (long)rank;
+    printf("Thread %ld of %d\n",my_rank,thread_count);
+    return NULL;
+}
 
-    int n = 1000;
-    int m = 10000;
-    
-    populate(&head, n);
 
-    printf("\n");
-    print(&head);
+int main(int argc, char* argv[])
+{
+//    srand(time(0));
+//    struct list_node_s *head = NULL;
+//
+//    int n = 1000;
+//    int m = 10000;
+//
+//    populate(&head, n);
+//
+//    printf("\n");
+//    print(&head);
+//
+//    random_generator(&head, m, 0.99, 0.005, 0.005);
+//
+//    printf("\n");
+//    print(&head);
+//
+//    destructor(&head);
 
-    random_generator(&head, m, 0.99, 0.005, 0.005);
 
-    printf("\n");
-    print(&head);
 
-    destructor(&head);
+    long thread;
+    pthread_t* thread_handles;
+    thread_count= strtol(argv[1],NULL,10); // will be assigned in the runtime
+    thread_handles=malloc(thread_count* sizeof(pthread_t));
+
+    for(thread = 0; thread<thread_count;thread++) {
+        pthread_create(&thread_handles[thread],NULL,runner,(void*) thread);
+    }
+
+    printf("main thread\n");
+
+    for (thread = 0; thread < thread_count ; thread++) {
+        pthread_join(thread_handles[thread],NULL);
+    }
+
+    free(thread_handles);
+    return 0;
+
+
 }
