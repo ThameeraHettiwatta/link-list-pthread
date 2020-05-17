@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+#include <sys/time.h>
 
 /*********************************************************************
  * TYPEDEFS
@@ -191,10 +191,17 @@ void random_generator(struct list_node_s **head_p, int m, float mM, float mI, fl
     int opI = m * mI;
     int countM = 0, countI = 0, countD = 0, mCount = 0;
     int random;
+    int operation;
 
     while( mCount < m )
     {
-        int operation = rand()%3;
+        if( countD >= opD && countI >= opI )
+        {
+            operation = 0;
+        }
+        else
+            operation = rand()%3;
+        
         random = rand()%65536;
 
         switch (operation)
@@ -249,32 +256,74 @@ void random_generator(struct list_node_s **head_p, int m, float mM, float mI, fl
  */
 void populate(struct list_node_s **head_p, int n)
 {
-    int random;
-    for(int i = 0; i < n; i++) 
+    int i = 0;
+    while (i < n) 
     {
-        random = rand()%65536;
-        Insert(random, head_p);
+        if (Insert(rand()%65536, head_p) == 1)
+            i++;
     }
 }
 
+/*********************************************************************
+ * @fn      run_time
+ *
+ * @brief   calculates the run time from time begin to time end 
+ *
+ * @param   time_begin  - begin timer 
+ * @param   time_end    - end timer
+ *
+ * @return  (double) time in seconds
+ */
+double run_time(struct timeval time_begin, struct timeval time_end) {
+    return (double) (time_end.tv_usec - time_begin.tv_usec) / 1000000 + (double) (time_end.tv_sec - time_begin.tv_sec);
+}
 
-void main()
+
+void main(int argc, char* argv[])
 {
     srand(time(0));
     struct list_node_s *head = NULL;
+    struct timeval time_begin, time_end;
 
+    int opt = strtol(argv[1],NULL,10);
+
+    //n and m values
     int n = 1000;
     int m = 10000;
-    
+
+    //populate the list with n values
     populate(&head, n);
 
-    printf("\n");
-    print(&head);
+    // printf("\n");
+    // print(&head);
 
-    random_generator(&head, m, 0.99, 0.005, 0.005);
+    gettimeofday(&time_begin, NULL);
 
-    printf("\n");
-    print(&head);
+    switch (opt)
+    {
+        case 1:
+            random_generator(&head, m, 0.99, 0.005, 0.005);
+            break;
+        case 2:
+            random_generator(&head, m, 0.9, 0.05, 0.05);
+            break;
+        case 3:
+            random_generator(&head, m, 0.5, 0.25, 0.25);
+            break;
+        default:
+            // default is case 1
+            random_generator(&head, m, 0.99, 0.005, 0.005);
+            opt = 1;
+            break;
+    }
 
+    gettimeofday(&time_end, NULL);
+
+    printf("Serial linked list time spent for case %d : %.6f secs\n", opt, run_time(time_begin, time_end));
+
+    // printf("\n");
+    // print(&head);
+
+    //free up the memory 
     destructor(&head);
 }
