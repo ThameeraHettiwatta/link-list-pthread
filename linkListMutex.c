@@ -234,7 +234,7 @@ void *thread_runner()
             {
                 Member(random, &head_p);
                 countM++;
-                // printf("m");
+                // printf(" m");
             }
             pthread_mutex_unlock(&mutex);
             break;
