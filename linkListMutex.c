@@ -196,16 +196,11 @@ void destructor(struct list_node_s **head_p)
 
 
 /*********************************************************************
- * @fn      random_generator
+ * @fn      thread_runner
  *
- * @brief   random number generator which grenerates random numbers and
- *          random insert, delete & member operations 
- *
- * @param   head_p - pointer to the head on link list
- * @param   m      - total no of operation to be carried out
- * @param   mM     - no of member operations ratio
- * @param   mI     - no of insert operations ratio
- * @param   mD     - no of delete operations ratio
+ * @brief   generates and run member, insert and delete operations
+ *          the given no of threads in parallel. Uses mutex locks 
+ *          when accessing the link list.
  *
  * @return  none
  */
