@@ -285,6 +285,7 @@ void main(int argc, char* argv[])
     struct list_node_s *head = NULL;
     struct timeval time_begin, time_end;
 
+    // Set the terminal inputs
     int opt = strtol(argv[1],NULL,10);
 
     //n and m values
@@ -294,11 +295,10 @@ void main(int argc, char* argv[])
     //populate the list with n values
     populate(&head, n);
 
-    // printf("\n");
-    // print(&head);
-
+    // Begin timer
     gettimeofday(&time_begin, NULL);
 
+    // Select the case from cmd prompt input
     switch (opt)
     {
         case 1:
@@ -317,12 +317,10 @@ void main(int argc, char* argv[])
             break;
     }
 
+    // End timer
     gettimeofday(&time_end, NULL);
 
     printf("Serial linked list time spent for case %d : %.6f secs\n", opt, run_time(time_begin, time_end));
-
-    // printf("\n");
-    // print(&head);
 
     //free up the memory 
     destructor(&head);
