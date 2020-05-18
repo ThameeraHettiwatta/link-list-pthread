@@ -212,7 +212,7 @@ void random_generator(struct list_node_s **head_p, int m, float mM, float mI, fl
             {
                 Member(random, head_p);
                 countM++;
-                // printf("m");
+                // printf("m ");
             }
     
             break;
