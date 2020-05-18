@@ -6,6 +6,30 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
+#include <pthread.h>
+
+/*********************************************************************
+ * GLOBAL VARIABLES
+ */
+
+// No of threads being exicuted
+int thread_count; 
+
+// Count of member, insert, delete operations being executed by thread
+int countM = 0, countI = 0, countD = 0;
+
+// No of member, insert, delete operation carried out to tht list
+int opM, opD, opI;
+
+// No of total operation to list
+int m; 
+
+// Initializing the head pointer to the list
+struct list_node_s *head_p = NULL;
+
+// Construct the mutex
+pthread_mutex_t mutex;
+
 
 /*********************************************************************
  * TYPEDEFS
@@ -106,7 +130,7 @@ int Delete(int value, struct list_node_s** head_p)
         curr_p = curr_p->next;
     }
 
-    if (curr_p == NULL && curr_p->data == value)
+    if (curr_p != NULL && curr_p->data == value)
     {
         // deleting first node
         if (pred_p == NULL)
@@ -170,6 +194,7 @@ void destructor(struct list_node_s **head_p)
     }
 }
 
+
 /*********************************************************************
  * @fn      random_generator
  *
@@ -184,17 +209,14 @@ void destructor(struct list_node_s **head_p)
  *
  * @return  none
  */
-void random_generator(struct list_node_s **head_p, int m, float mM, float mI, float mD)
+void *thread_runner()
 {
-    int opM = m * mM;
-    int opD = m * mD;
-    int opI = m * mI;
-    int countM = 0, countI = 0, countD = 0, mCount = 0;
     int random;
     int operation;
+    int mCount = 0;
 
     while( mCount < m )
-    {
+    {        
         if( countD >= opD && countI >= opI )
         {
             operation = 0;
@@ -207,41 +229,42 @@ void random_generator(struct list_node_s **head_p, int m, float mM, float mI, fl
         switch (operation)
         {
             case 0:
-
+            pthread_mutex_lock(&mutex);
             if( opM > countM)
             {
-                Member(random, head_p);
+                Member(random, &head_p);
                 countM++;
                 // printf("m");
             }
-    
+            pthread_mutex_unlock(&mutex);
             break;
 
             case 1:
-
+            pthread_mutex_lock(&mutex);
             if( opI > countI)
             {
-                Insert(random, head_p);
+                Insert(random, &head_p);
                 countI++;
                 // printf("i");
             }
-            
+            pthread_mutex_unlock(&mutex);
             break;
 
             case 2:
-
+            pthread_mutex_lock(&mutex);
             if( opD > countD)
             {
-                Delete(random, head_p);
+                Delete(random, &head_p);
                 countD++;
                 // printf("d");
             }
-  
+            pthread_mutex_unlock(&mutex);
             break;
         }
 
         mCount = countM + countI + countD;
     }
+    return NULL;
 }
 
 /*********************************************************************
@@ -279,51 +302,92 @@ double run_time(struct timeval time_begin, struct timeval time_end) {
 }
 
 
-void main(int argc, char* argv[])
+int  main(int argc, char* argv[])
 {
     srand(time(0));
-    struct list_node_s *head = NULL;
     struct timeval time_begin, time_end;
 
+    // Set the terminal inputs 
     int opt = strtol(argv[1],NULL,10);
+    thread_count = strtol(argv[2],NULL,10);
 
-    //n and m values
+    // Initialize and set n, m values
     int n = 1000;
-    int m = 10000;
+    m = 10000;
+
+    // Ratio values of member, inerst and delete
+    float mM, mI, mD;
+
+    // Construct thread handlers
+    pthread_t *thread_handlers;
+
+    // allocate memory for threads
+    thread_handlers = malloc(sizeof(pthread_t) * thread_count);
 
     //populate the list with n values
-    populate(&head, n);
+    populate(&head_p, n);
 
-    // printf("\n");
-    // print(&head);
-
-    gettimeofday(&time_begin, NULL);
-
+    // Select the case from cmd prompt input
     switch (opt)
     {
         case 1:
-            random_generator(&head, m, 0.99, 0.005, 0.005);
+            mM = 0.99;
+            mI = 0.005;
+            mD = 0.005;
             break;
         case 2:
-            random_generator(&head, m, 0.9, 0.05, 0.05);
+            mM = 0.9;
+            mI = 0.05;
+            mD = 0.05;
             break;
         case 3:
-            random_generator(&head, m, 0.5, 0.25, 0.25);
+            mM = 0.5;
+            mI = 0.25;
+            mD = 0.25;
             break;
         default:
             // default is case 1
-            random_generator(&head, m, 0.99, 0.005, 0.005);
+            mM = 0.99;
+            mI = 0.005;
+            mD = 0.005;
             opt = 1;
             break;
     }
 
+    // Calculate the no of member, insert and delete operations
+    opM = m * mM;
+    opD = m * mD;
+    opI = m * mI;
+
+     // Initializing the mutex
+    pthread_mutex_init(&mutex, NULL);
+
+    // Begin timer
+    gettimeofday(&time_begin, NULL);
+
+    // Create threads
+    int i = 0;
+    for(i = 0; i < thread_count; i++) 
+    {
+        pthread_create(&thread_handlers[i], NULL, (void *) thread_runner, NULL);
+    }
+
+    // Join threads 
+    for(i = 0; i < thread_count; i++)  
+    {
+        pthread_join(thread_handlers[i], NULL);
+    }
+
+    // End timer 
     gettimeofday(&time_end, NULL);
+
+    // Destroying the mutex
+    pthread_mutex_destroy(&mutex);
 
     printf("Serial linked list time spent for case %d : %.6f secs\n", opt, run_time(time_begin, time_end));
 
-    // printf("\n");
-    // print(&head);
+    // Free up the memory 
+    destructor(&head_p);
 
-    //free up the memory 
-    destructor(&head);
+    return 0;
 }
