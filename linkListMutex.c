@@ -384,7 +384,7 @@ int  main(int argc, char* argv[])
     // Destroying the mutex
     pthread_mutex_destroy(&mutex);
 
-    printf("Serial linked list time spent for case %d : %.6f secs\n", opt, run_time(time_begin, time_end));
+    printf("Multi threaded linked list with mutex time spent for case %d : %.6f secs\n", opt, run_time(time_begin, time_end));
 
     // Free up the memory 
     destructor(&head_p);
