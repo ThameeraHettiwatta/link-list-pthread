@@ -106,7 +106,7 @@ int Delete(int value, struct list_node_s** head_p)
         curr_p = curr_p->next;
     }
 
-    if (curr_p == NULL && curr_p->data == value)
+    if (curr_p != NULL && curr_p->data == value)
     {
         // deleting first node
         if (pred_p == NULL)
